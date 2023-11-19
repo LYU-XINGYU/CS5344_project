@@ -24,7 +24,7 @@ def flattenByHashtag(tweetid, hashtags, country):
     return result
 
 ####### get input data into dataframe
-dfTweet = sqlContext.read.option("header", True).csv("tweet_modified")
+dfTweet = sqlContext.read.option("header", True).csv("tweet_modified.csv")
 dfTweet.createOrReplaceTempView("tweet_view")
 dfLocation = sqlContext.read.option("header", True).csv("location.csv")
 dfLocation.createOrReplaceTempView("location_view")
