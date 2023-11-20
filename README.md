@@ -2,7 +2,7 @@
 ## Code
 ### How to run
 ```bash
-spark-submit test1.py
+spark-submit program.py tweet_modified.csv location.csv SentiWordNet_3.0.0_modified_nohash.CSV out
 ```
 
 ### Input

@@ -24,9 +24,9 @@ def flattenByHashtag(tweetid, hashtags, country):
     return result
 
 ####### get input data into dataframe
-dfTweet = sqlContext.read.option("header", True).csv("tweet_modified.csv")
+dfTweet = sqlContext.read.option("header", True).csv(sys.argv[1])
 dfTweet.createOrReplaceTempView("tweet_view")
-dfLocation = sqlContext.read.option("header", True).csv("location.csv")
+dfLocation = sqlContext.read.option("header", True).csv(sys.argv[2])
 dfLocation.createOrReplaceTempView("location_view")
 queryStr = "select tweetid, lang, isreshare, retweetcount, likes, text, userid, country, city from tweet_view, location_view where tweet_view.locationid=location_view.locationid"
 dfData = sqlContext.sql(queryStr)
@@ -34,7 +34,8 @@ rddData = dfData.rdd
 # dfData.show()
 
 ####### get word sentiment data from file into a dict
-dfSentimentRef = sqlContext.read.option("header", True).csv("SentiWordNet_3.0.0_modified_nohash.CSV")
+dfSentimentRef = sqlContext.read.option("header", True).csv(sys.argv[3])
+# dfSentimentRef = sqlContext.read.option("header", True).csv("SentiWordNet_3.0.0_modified_nohash.CSV")
 dfSentimentRef = dfSentimentRef.select(dfSentimentRef.SynsetTerms, dfSentimentRef.PosScore, dfSentimentRef.NegScore)
 dfSentimentRef = dfSentimentRef.rdd.map(lambda x: (str(x[0]).split(" "), (float(x[1]) - float(x[2])))).toDF(["words","score"])
 dfSentimentRef = dfSentimentRef.select(explode(dfSentimentRef.words), dfSentimentRef.score)
@@ -66,7 +67,7 @@ rddTweetidWordSentiment = dfTweetidWord.rdd.map(lambda x: (x[0],findSentimentFor
 rddTweetidSentiment = rddTweetidWordSentiment.reduceByKey(lambda x1, x2: x1+x2)
 dfTweetidSentiment = rddTweetidSentiment.toDF(["tweetid", "sentiment"])
 # dfTweetidSentiment.orderBy(("score")).show(100)
-dfTweetidSentiment.write.option("header",True).csv("dfTweetidSentiment.csv")
+dfTweetidSentiment.write.option("header",True).csv(sys.argv[4]+"/dfTweetidSentiment.csv")
 # rddTweetidSentiment.toDF().show()
 
 ####### calculate sentiment score for each hashtag
@@ -82,7 +83,7 @@ rddHashtagSentiment = dfTweetidHashtagCountrySentiment.select("hashtag", "sentim
 rddHashtagSentiment = rddHashtagSentiment.reduceByKey(lambda x1, x2: x1+x2)
 dfHashtagSentiment = rddHashtagSentiment.toDF(["hashtag", "sentiment"])
 # dfHashtagSentiment.toDF().show(100)
-dfHashtagSentiment.write.option("header",True).csv("dfHashtagSentiment.csv")
+dfHashtagSentiment.write.option("header",True).csv(sys.argv[4]+"/dfHashtagSentiment.csv")
 
 ####### ???
 # rddHashtagCountrySentiment = dfTweetidHashtagCountrySentiment.select("hashtag", "country", "sentiment").rdd
